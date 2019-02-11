@@ -1,0 +1,7 @@
+{
+  "index.html": {
+    "refer": [
+      "page/chatroom.html"
+    ]
+  }
+}

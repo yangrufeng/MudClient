@@ -1,0 +1,1140 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link href="../css/mui.picker.css" rel="stylesheet" />
+		<link href="../css/mui.poppicker.css" rel="stylesheet" />
+		<style>
+			.dice {
+	            width: 100px;
+	            height: 100px;
+	            background-image: url(../images/dice_1.jpg);
+	            cursor: pointer;
+	            position: relative;
+	        }
+			.mui-input-group label {
+				width: 30%;
+			}
+			
+			.mui-input-row label~input,
+			.mui-input-row label~select,
+			.mui-input-row label~textarea {
+				width: 70%;
+			}
+			
+			.mui-input-row .mui-btn {
+				width: 68%;
+			}
+			.mui-off-canvas-left, .mui-off-canvas-right{
+			width:100%;//菜单宽度
+			}
+			.mui-off-canvas-wrap.mui-right .mui-inner-wrap{
+			-webkit-transform: translate3d(100%,0,0);//同上
+			transform: translate3d(100%,0,0);//同上
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">聊天室</h1>
+		</header>
+		<div class="mui-content">
+		<div id="offCanvasWrapper" class="mui-off-canvas-wrap mui-draggable">
+			
+			<!--侧滑菜单部分-->
+			<aside id="offCanvasSide" class="mui-off-canvas-left">
+				<div id="offCanvasSideScroll" class="mui-scroll-wrapper">
+					<div class="mui-scroll">
+						<div class="title">操作界面</div>
+						<div class="content">
+							<textarea id="descript" rows="8" placeholder="一片漆黑，你可以点击【请选择】移动到出生点开始游戏" disabled="disabled"></textarea>
+						</div>
+						<ul class="mui-table-view">
+							<li id="map" class="mui-table-view-cell">地图</li>
+							<li id="opt" class="mui-table-view-cell">操作</li>
+							<li id="task" class="mui-table-view-cell">任务<span id="unFinishedNum" class="mui-badge mui-badge-primary">0</span></li>
+							<li id="fight" class="mui-table-view-cell">战斗<span id="aliveNum" class="mui-badge mui-badge-primary">0</span></li>
+							<li id="interaction" class="mui-table-view-cell">互动<span id="persionNum" class="mui-badge mui-badge-primary">0</span></li>
+							<li id="item" class="mui-table-view-cell">物品<span id="itemNum" class="mui-badge mui-badge-primary">0</span></li>
+						</ul>
+						<form class="mui-input-group">
+							<div class="mui-input-row">
+								<input style="width:100%;" id="playerInfo" class="mui-input" type="text" readonly="readonly"/>
+							</div>
+							<div class="mui-input-row">
+								<button style="width:100%;" id='option' class="mui-btn mui-icon mui-icon-arrowdown mui-right" type='button'>请选择</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</aside>
+			<div class="mui-inner-wrap">
+				<div class="mui-content-padded" style="margin: 5px;">
+					<div class="mui-input-row" style="margin: 10px 5px;">
+						<textarea id="textarea" rows="15" placeholder="消息记录" disabled="disabled"></textarea>
+					</div>
+					<form class="mui-input-group">
+						<div >
+							<button id='showUserPicker' class="mui-btn mui-btn-block" type='button' value="0.0.0.0">所有人</button>
+							<input id="message" type="text" class="mui-input-speech mui-input-clear" placeholder="请输入消息">
+						</div>
+						<div class="mui-content-padded">
+							<button style="width:100%" type="button" class="mui-btn mui-btn-primary" id='confirmInput'>发送</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		</div>
+		<!-- 显示任务信息 -->
+		<div id="taskPopover" class="mui-popover" style="height: 250px;">
+			<div class="mui-scroll-wrapper">
+        		<div class="mui-scroll">
+					<ul id="taskList" class="mui-table-view">
+						<li class="mui-table-view-divider">任务列表</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<!-- 显示操作信息 -->
+		<div id="optionPopover" class="mui-popover" style="height: 250px;">
+			<div class="mui-scroll-wrapper">
+        		<div class="mui-scroll">
+					<ul id="optionList" class="mui-table-view">
+						<li class="mui-table-view-divider">操作列表</li>
+						<li id="rotate" class="mui-table-view-cell"><div id="rotateBtn" class="mui-btn mui-btn-blue mui-btn-block">掷骰子</div></li>
+						<li id="wait" class="mui-table-view-cell"><div id="waitBtn" class="mui-btn mui-btn-blue mui-btn-block">等待</div></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<!-- 显示地图信息 -->
+		<div id="mapPopover" class="mui-popover" style="height: 250px;">
+			<div class="mui-scroll-wrapper">
+				<table class="table" width="100%" height="100%" border="1" cellspacing="10">
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<!-- 显示怪物信息 -->
+		<div id="monsterPopover" class="mui-popover" style="height: 250px;">
+			<div class="mui-scroll-wrapper">
+        		<div class="mui-scroll">
+					<ul id="monsterList" class="mui-table-view">
+						<li class="mui-table-view-divider">怪物列表</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<!-- 显示人物信息 -->
+		<div id="persionPopover" class="mui-popover" style="height: 250px;">
+			<div class="mui-scroll-wrapper">
+        		<div class="mui-scroll">
+					<ul id="persionList" class="mui-table-view">
+						<li class="mui-table-view-divider">人物列表</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<!-- 显示物品信息 -->
+		<div id="itemPopover" class="mui-popover" style="height: 250px;">
+			<div class="mui-scroll-wrapper">
+        		<div class="mui-scroll">
+					<ul id="itemList" class="mui-table-view">
+						<select id="selectedPersion" class="mui-btn mui-btn-block">
+							<option disabled selected>---请点此选择使用目标---</option>
+						</select>
+						<li class="mui-table-view-divider">物品列表</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div id="detailPopover" class="mui-popover" style="height: 300px;">
+			<div class="mui-popover-arrow"></div>
+			<div class="mui-scroll-wrapper">
+				<div class="mui-scroll">
+					<div class="mui-input-group">
+						<div class="mui-input-row">
+							<label style="width: 40%;">名称</label>
+							<input style="width: 60%;" id="detailName" class="mui-input" type="text" readonly="readonly"/>
+						</div>
+						<div class="mui-input-row">
+							<label style="width: 40%;">体质</label>
+							<input style="width: 60%;" id="detailCon" class="mui-input-numbox" type="number" readonly="readonly"/>
+						</div>
+						<div class="mui-input-row">
+							<label style="width: 40%;">力量</label>
+							<input style="width: 60%;" id="detailStr" class="mui-input-numbox" type="number" readonly="readonly"/>
+						</div>
+						<div class="mui-input-row">
+							<label style="width: 40%;">敏捷</label>
+							<input style="width: 60%;" id="detailDex" class="mui-input-numbox" type="number" readonly="readonly"/>
+						</div>
+						<div class="mui-content-padded">
+							<textarea id="detailDesc" rows="4" placeholder="角色描述"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="detail2Popover" class="mui-popover" style="height: 250px;">
+			<div class="mui-popover-arrow"></div>
+			<div class="mui-scroll-wrapper">
+				<div class="mui-scroll">
+					<div class="mui-input-group">
+						<div class="mui-input-row">
+							<label style="width: 40%;">物品名称</label>
+							<input style="width: 60%;" id="itemName" class="mui-input" type="text" readonly="readonly"/>
+						</div>
+						<div class="mui-input-row">
+							<label style="width: 40%;">物品价值</label>
+							<input style="width: 60%;" id="price" class="mui-input" type="text" readonly="readonly"/>
+						</div>
+						<div class="mui-content-padded" style="margin: 10px 5px;">
+								<textarea id="desc" rows="5" readonly="readonly"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- 显示角色信息 -->
+		<div id="popover" class="mui-popover" data-disable-auto-close="true" style="height: 250px;">
+			<div class="mui-popover-arrow"></div>
+			<div class="mui-scroll-wrapper">
+        		<div class="mui-scroll">
+					<div>
+						<form class="mui-input-group">
+							<div class="mui-input-row">
+								<label>角色</label>
+								<button id='role' class="mui-btn mui-icon mui-icon-arrowdown mui-right" type='button'>请选择角色</button>
+							</div>
+							<div class="mui-input-row">
+								<label>体质</label>
+								<input id="con" type="text" class="mui-input-clear" disabled="disabled">
+							</div>
+							<div class="mui-input-row">
+								<label>力量</label>
+								<input id="str" type="text" class="mui-input-clear" disabled="disabled">
+							</div>
+							<div class="mui-input-row">
+								<label>敏捷</label>
+								<input id="dex" type="text" class="mui-input-clear" disabled="disabled">
+							</div>
+							<div class="mui-input-row">
+								<label>饥饿值</label>
+								<input id="hungry" type="text" class="mui-input-clear" disabled="disabled">
+							</div>
+							<div class="mui-content-padded" style="margin: 10px 5px;">
+								<textarea id="des" rows="3" placeholder="角色描述"></textarea>
+							</div>
+							<div class="mui-content-padded">
+								<button id='submitAudit' type="button" class="mui-btn mui-btn-block mui-btn-primary">确定</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>		
+		</div>
+		<div id="rotatePopover" class="mui-popover">
+			<div id="dice" class="dice"></div>
+		</div>
+		<script src="../js/mui.js"></script>
+		<script src="../js/mui.picker.min.js"></script>
+		<script src="../js/mui.picker.js"></script>
+		<script src="../js/mui.poppicker.js"></script>
+		<script src="../js/common.js"></script>
+		<script type="text/javascript">
+			mui.init({
+			  gestureConfig:{
+			    longtap: true, //默认为false
+			    release:true
+			   }
+			});
+			document.getElementById("waitBtn").addEventListener('tap', function() {
+				var btnArray = ['否', '是'];
+				mui.confirm('点击等待会结束当前回合，确认等待？', '提示', btnArray, function(e) {
+					if(isFirstMove) {
+						mui.toast("请先移动到一个地址后再选择等待");
+						return;
+					}
+					if (e.index == 1) {
+						sendMessage(CLIENT_WAIT+SPLIT_SEPARATOR+1);
+					}
+				})
+			});
+		    var mod=MOD_NONE,isFirstMove=true,socket,out,ins,nodes,diceButton,inputStreamReader,multiText,userPicker,rolePiker,roles,position,pickerButton,optionPicker,isDead,playerInfo,persions,isWaitingOthers=false;
+			mui.plusReady(function() {
+				mui.showLoading = function (message, type) {
+	                plus.nativeUI.showWaiting(message,{back:'none'});//可取值"none"表示截获处理返回键，但不做任何响应；"close"表示截获处理返回键并关闭等待框；"transmit"表示不截获返回键，向后传递给Webview窗口继续处理（与未显示等待框的情况一致）。
+	            };
+	 
+	            //隐藏加载框
+	            mui.hideLoading = function (callback) {
+	                plus.nativeUI.closeWaiting();
+	            }
+	            // = mui(".dice");
+	            diceButton = document.getElementById("dice")
+		        diceButton.addEventListener("tap",function(){
+		            //dice.css('cursor', 'default');
+		            var num =Math.ceil(Math.random()*6);
+		            //dice.css('background-image', 'url(../images/dice_f.jpg)');
+		            diceButton.style.backgroundImage = 'url(../images/dice_f.jpg)';
+		            setTimeout(function(){
+		                //dice.css('background-image', 'url(../images/dice_s.jpg)');
+		                diceButton.style.backgroundImage = 'url(../images/dice_s.jpg)';
+		            },200);
+		            setTimeout(function(){
+		                //dice.css('background-image', 'url(../images/dice_t.jpg)');
+		                diceButton.style.backgroundImage = 'url(../images/dice_t.jpg)';
+		            },200);
+		            setTimeout(function(){
+		                //dice.css('background-image', 'url(../images/dice_'+num+'.jpg)')
+		                diceButton.style.backgroundImage = 'url(../images/dice_'+num+'.jpg)';
+		            }, 200);
+		        });
+				 //侧滑容器父节点
+				var offCanvasWrapper = mui('#offCanvasWrapper');
+				 //主界面容器
+				var offCanvasInner = offCanvasWrapper[0].querySelector('.mui-inner-wrap');
+				 //菜单容器
+				var offCanvasSide = document.getElementById("offCanvasSide");
+				offCanvasInner.insertBefore(offCanvasSide, offCanvasInner.firstElementChild);
+				offCanvasWrapper.offCanvas().refresh();
+				mui('#offCanvasSideScroll').scroll();
+				//实现ios平台原生侧滑关闭页面；
+				if (mui.os.plus && mui.os.ios) {
+					mui.plusReady(function() { //5+ iOS暂时无法屏蔽popGesture时传递touch事件，故该demo直接屏蔽popGesture功能
+						plus.webview.currentWebview().setStyle({
+							'popGesture': 'none'
+						});
+					});
+				}
+				
+				//mask = mui.createMask(function(){return false;});//function为用户点击蒙版时自动执行的回调；
+				userPicker = new mui.PopPicker();
+				rolePiker = new mui.PopPicker();
+				optionPicker = new mui.PopPicker();
+				var self = plus.webview.currentWebview();
+           		var ip = self.ip;
+           		var nickname = self.nickname;
+           		var port = 55555;
+           		var Socket = plus.android.importClass("java.net.Socket");
+				var JavaByte = plus.android.importClass("java.lang.Byte");
+				var PrintWriter = plus.android.importClass("java.io.PrintWriter");
+				var BufferedWriter = plus.android.importClass("java.io.BufferedWriter");
+				var OutputStreamWriter = plus.android.importClass("java.io.OutputStreamWriter");
+				var BufferedReader = plus.android.importClass("java.io.BufferedReader");
+				var InputStreamReader = plus.android.importClass("java.io.InputStreamReader");
+           		var StrictMode = plus.android.importClass("android.os.StrictMode");
+				var Build = plus.android.importClass("android.os.Build");
+				
+				//测试改良
+				var StrictMode = plus.android.importClass("android.os.StrictMode");
+				var Build = plus.android.importClass("android.os.Build");
+				if (Build.VERSION.SDK_INT > 9) {
+					var policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+					StrictMode.setThreadPolicy(policy);
+				}
+				socket = new Socket(ip, port);
+				socket.setSoTimeout(49);
+				var outputStreamWriter = new OutputStreamWriter(socket.getOutputStream());
+				var bufferWriter = new BufferedWriter(outputStreamWriter);
+				out = new PrintWriter(bufferWriter, true);
+				inputStreamReader = new InputStreamReader(socket.getInputStream());
+            	var confirmButton = document.getElementById('confirmInput');
+            	var messageInput = document.getElementById("message");
+            	confirmButton.addEventListener('tap',function(event) {
+            		sendMessage(CLIENT_INPUT+SPLIT_SEPARATOR+showUserPickerButton.value+"|"+messageInput.value); // 发送群发消息
+            		messageInput.value = '';
+            	});
+            	multiText = document.getElementById("textarea");
+            	sendMessage(CLIENT_NICKNAME+SPLIT_SEPARATOR+nickname+ITEM_SEPARATOR+plus.device.uuid); // 发送玩家昵称
+            	var showUserPickerButton = document.getElementById('showUserPicker');
+				showUserPickerButton.addEventListener('tap', function(event) {
+					sendMessage(CLIENT_USERS+SPLIT_SEPARATOR+"ALL");
+					userPicker.show(function(items) {
+						showUserPickerButton.innerText = items[0].text;
+						showUserPickerButton.value = items[0].value;
+						//返回 false 可以阻止选择框的关闭
+						//return false;
+					});
+				}, false);
+				var showRolePickerButton = document.getElementById('role');
+				var con = document.getElementById("con");
+				var str = document.getElementById("str");
+				var dex = document.getElementById("dex");
+				var hungry = document.getElementById("hungry");
+				var des = document.getElementById("des");
+				var submitButton = document.getElementById("submitAudit");
+				showRolePickerButton.addEventListener('tap', function(event) {
+					rolePiker.show(function(items) {
+						showRolePickerButton.innerText = items[0].text;
+						showRolePickerButton.value = items[0].value;
+						for(index in roles) {
+							if(roles[index].NAME == items[0].text) {
+								con.value = roles[index].CON;
+								str.value = roles[index].STR;
+								dex.value = roles[index].DEX;
+								hungry.value = roles[index].HUNGRY;
+								des.value = roles[index].DESC;
+								break;
+							}
+						}
+						//返回 false 可以阻止选择框的关闭
+						//return false;
+					});
+				}, false);
+				submitButton.addEventListener("tap",function(event){
+					sendMessage(CLIENT_PICKROLE+SPLIT_SEPARATOR+showRolePickerButton.value);
+				});
+				var optButton = document.getElementById("opt");
+				optButton.addEventListener("tap",function(event){
+					mui('#optionPopover').popover('toggle',optButton);
+				});
+				var taskButton = document.getElementById("task");
+				taskButton.addEventListener("tap",function(event){
+					mui('#taskPopover').popover('toggle',taskButton);
+				});
+				var fightButton = document.getElementById("fight");
+				fightButton.addEventListener("tap",function(event){
+					mui('#monsterPopover').popover('toggle',fightButton);
+				});
+				var interactButton = document.getElementById("interaction");
+				interactButton.addEventListener("tap",function(event){
+					mui('#persionPopover').popover('toggle',interactButton);
+				});
+				var itemButton = document.getElementById("item");
+				itemButton.addEventListener("tap",function(event){
+					mui('#itemPopover').popover('toggle',itemButton);
+				});
+				var mapButton = document.getElementById("map");
+				mapButton.addEventListener("tap",function(event){
+					sendMessage(CLIENT_GETMAP+SPLIT_SEPARATOR+position);
+					mui('#mapPopover').popover('toggle',mapButton);
+				});
+				var rotateButton = document.getElementById("rotateBtn");
+				rotateButton.addEventListener("tap",function(event){
+					mui('#rotatePopover').popover('toggle',rotateButton);
+				});
+				mui('.mui-table-view').off('longtap','li').on('longtap', 'li', function(event) { // 长按弹出详情
+    				var elem = this;
+    				mui.toast(elem.innerText);
+    			});
+    			mui('#monsterList').off('tap', '.mui-btn-yellow').on('tap', '.mui-btn-yellow', function(event) { // 查看怪物详情
+    				var elem = this;
+    				sendMessage(CLIENT_MONSTERDETAIL+SPLIT_SEPARATOR+elem.parentNode.children[0].value+ITEM_SEPARATOR+elem.parentNode.parentNode.value);
+    			});
+    			mui('#monsterList').off('tap', '.mui-btn-red').on('tap', '.mui-btn-red', function(event) { // 与指定怪物战斗
+    				var elem = this;
+    				sendMessage(CLIENT_FIGHT+SPLIT_SEPARATOR+elem.parentNode.children[0].value+ITEM_SEPARATOR+elem.parentNode.parentNode.value);
+    			});
+    			mui('#persionList').off('tap', '.mui-btn-yellow').on('tap', '.mui-btn-yellow', function(event) { // 查看人物详情
+    				var elem = this;
+    				sendMessage(CLIENT_PERSIONDETAIL+SPLIT_SEPARATOR+elem.parentNode.children[0].value);
+    			});
+    			mui('#persionList').off('tap', '.mui-btn-green').on('tap', '.mui-btn-green', function(event) { // 与指定人物战斗
+    				var elem = this;
+    				var npc = {};
+    				npc[JSON_ID] = elem.parentNode.children[0].value;
+    				npc[JSON_NAME] = elem.parentNode.children[1].value;
+    				npc[JSON_CON] = elem.parentNode.children[2].value;
+    				talkToNPC(npc);
+    				descript.value="可操作选项已经更新，请点击下方【请选择】按钮选项相应人物执行谈话操作。"+'\n'+descript.value;
+    				mui('#persionPopover').popover('hide'); // 关闭人物列表
+    			});
+    			mui('#persionList').off('tap', '.mui-btn-red').on('tap', '.mui-btn-red', function(event) { // 与指定人物战斗
+    				var elem = this;
+    				sendMessage(CLIENT_FIGHT_PERSION+SPLIT_SEPARATOR+elem.parentNode.children[0].value);
+    			});
+    			mui('#itemList').off('tap', '.mui-btn-yellow').on('tap', '.mui-btn-yellow', function(event) { // 查看物品详情
+    				var elem = this;
+    				sendMessage(CLIENT_ITEMDETAIL+SPLIT_SEPARATOR+elem.parentNode.children[0].value);
+    			});
+    			mui('#itemList').off('tap', '.mui-btn-red').on('tap', '.mui-btn-red', function(event) { // 与指定物品使用
+    				var elem = this;
+    				var itemId = elem.parentNode.children[0].value;
+    				var itemName = elem.parentNode.parentNode.children[1].innerText;
+    				var selectedPersion = document.getElementById("selectedPersion");
+    				var persionId = selectedPersion.value;
+    				var persionName = selectedPersion.options[selectedPersion.selectedIndex].text
+    				clientUseItem(persionId+CMD_SEPARATOR+itemId,persionName+CMD_SEPARATOR+itemName);
+    			});
+				sendMessage(CLIENT_ROLES+SPLIT_SEPARATOR+nickname); // 发送玩家昵称触发隐藏角色
+//				var App = plus.android.runtimeMainActivity();
+				var Thread   = plus.android.importClass("java.lang.Thread");
+			    var Runnable = plus.android.implements( "java.lang.Runnable", {
+			        "run":function(){
+			        	var s;
+						try {
+							ins = new BufferedReader(inputStreamReader);
+							setInterval(
+								function() {
+									try {
+										while((s=ins.readLine())!=null){
+				                     		distributeMsg(s);
+				                		}
+										reconnectSocket();
+									}catch(error){
+//										if(plus.networkinfo.getCurrentType()!=3){// 3为状态码，wifi状态码是3
+//											while(plus.networkinfo.getCurrentType()==3) {
+//												reconnectSocket();
+//												break;
+//											}
+//							            }
+									}
+									
+								},1000);
+						} catch(err) {
+							mui.toast(err);
+						}
+			        }
+			    });
+//			    App.runOnUiThread(Runnable);
+			    var thd = new Thread(Runnable) ; 
+      			thd.start();
+      			var backButtonPress = 0;
+				plus.key.addEventListener('backbutton', function() {
+					backButtonPress++;
+					if (backButtonPress > 1) {
+						socket.close();
+						plus.webview.currentWebview().close();
+					} else {
+						plus.nativeUI.toast('再按一次退出游戏');
+					}
+					setTimeout(function() {
+						backButtonPress = 0;
+					}, 1000);
+					return false;
+				});
+			});
+            function showPlayerInfo() {
+            	var info = "体质"+playerInfo.con+"|"+"力量"+playerInfo.str+"|"+"敏捷"+playerInfo.dex+"|"+"饥饿值"+playerInfo.hungry;
+            	if(parseInt(playerInfo.con) <= 0 || parseInt(playerInfo.hungry) <= 0) {
+            		info="此人已死，有事烧纸……";
+            		isDead = true;
+            		mui.hideLoading();// 死亡单位会被移出行动队列，不必等待
+            	}
+            	document.getElementById("playerInfo").value=info;
+            }
+            function sendMessage(msg) { // 发送信息到服务器
+            	if(isDead && msg.split(SPLIT_SEPARATOR)[0]!=CLIENT_TRIGGER) { // 对于死亡的玩家，服务器不再响应发送的消息（除了最后要求服务器刷新选项）
+            		return;
+            	}
+            	var arr = msg.split(SPLIT_SEPARATOR);
+            	if(arr[0]==CLIENT_MOVE||arr[0]==CLIENT_FIGHT||arr[0]==CLIENT_FIGHT_PERSION||arr[0]==CLIENT_WAIT) { // 执行后需要等待的操作
+            		mui.showLoading("等待其他玩家操作");
+            		isWaitingOthers = true;
+            	}
+            	if(arr[0]==CLIENT_EVENT||arr[0]==CLIENT_USE_ITEM||CLIENT_PICK) { // 执行后需要等待的操作
+            		if(!isWaitingOthers) 
+            		mui.showLoading("等待服务器响应"); // 防止用户在服务器未相应完成前重复操作指定动作 
+            	}
+				out.println(msg);
+            }
+            function reconnectSocket() {
+            	var self = plus.webview.currentWebview();
+           		var ip = self.ip;
+           		var port = 55555;
+            	var Socket = plus.android.importClass("java.net.Socket");
+            	var PrintWriter = plus.android.importClass("java.io.PrintWriter");
+				var BufferedWriter = plus.android.importClass("java.io.BufferedWriter");
+				var OutputStreamWriter = plus.android.importClass("java.io.OutputStreamWriter");
+				var BufferedReader = plus.android.importClass("java.io.BufferedReader");
+				var InputStreamReader = plus.android.importClass("java.io.InputStreamReader");
+            	socket = new Socket(ip, port);
+				socket.setSoTimeout(50);
+				var outputStreamWriter = new OutputStreamWriter(socket.getOutputStream());
+				var bufferWriter = new BufferedWriter(outputStreamWriter);
+				out = new PrintWriter(bufferWriter, true);
+				inputStreamReader = new InputStreamReader(socket.getInputStream());
+				ins = new BufferedReader(inputStreamReader);
+				var nickname = self.nickname;
+            	sendMessage(CLIENT_NICKNAME+SPLIT_SEPARATOR+nickname+ITEM_SEPARATOR+plus.device.uuid); // 发送玩家昵称
+				mui.toast("重新链接服务器！");
+            }
+            function distributeMsg(s) { // 处理服务器响应信息
+            	var arr = s.split(SPLIT_SEPARATOR);
+            	var descript = document.getElementById("descript");
+            	
+            	/*
+            	 * 仅在调试时启用以下两行代码
+            	 */
+            	//var str = s+'\n'+multiText.value; 
+			    //multiText.value = str;
+            	if(arr!=null&&arr.length==2) {
+            		switch(arr[0]) {
+            			case SERVER_OUTPUT:
+            				var str = "【"+new Date().toLocaleTimeString()+"】"+arr[1]+'\n'+multiText.value;
+			    			multiText.value = str;
+			    			mui.toast(arr[1]);
+			    			break;
+			    		case SERVER_USERS:
+			    			var users = JSON.parse(arr[1]);
+			    			userPicker.setData(users);
+			    			break;
+			    		case SERVER_ROLES:
+			    			roles = JSON.parse(arr[1]);
+			    			var rolesJson = [];
+			    			for(index in roles) {
+			    				var temp = {"value":roles[index].ID,"text":roles[index].NAME};
+			    				rolesJson.push(temp);
+			    			}
+			    			rolePiker.setData(rolesJson);
+			    			mui('#popover').popover('toggle',document.getElementById("textarea"));
+			    			if(isFirstMove&&mod==MOD_SURVIVAL) { // 放在这里防止再次进入时也被显示
+			            		descript.value = "请点击地图，选择跳伞地点。";
+			            	}
+			    			break;
+			    		case SERVER_SHOWDESCRIPT:
+			    		case SERVER_MOVE:
+			    			descript.value=arr[1]; // 仅显示描述信息时刷新描述信息
+			    			if(position!=null) {
+			    				sendMessage(CLIENT_TRIGGER+SPLIT_SEPARATOR+position); // 向服务器发送查询触发事项的请求
+			    				position = null; // 使用过后置空
+			    			}
+			    			break;
+			    		case SERVER_ACTION:
+			    			var actions = JSON.parse(arr[1]);
+			    			generateOptions(actions,clientMove)
+			    			break;
+			    		case SERVER_PIKER:
+			    			var temp = arr[1].split(ITEM_SEPARATOR);
+			    			descript.value=temp[0]+'\n'+descript.value;
+			    			var choice = JSON.parse(temp[1]);
+			    			generateOptions(choice,clientPicker);
+			    			break;
+			    		case SERVER_TASK:
+			    			var tasks = JSON.parse(arr[1]);
+			    			var liList="<li class=\"mui-table-view-divider\">任务列表</li>";
+			    			var unfinishedNum = 0
+			    			//var finishedNum = 0;
+							for(var item in tasks) {
+								var zt = "";
+								var styleClass="";
+								if(tasks[item][JSON_ISFINISHED]==true) {
+									zt="（已完成）";
+									//finishedNum++;
+									styleClass="style=\"color:lightgray\"";
+								} else if(tasks[item][JSON_ISFINISHED]==false) {
+									zt="（未完成）";
+									unfinishedNum++;
+								}
+								liList+="<li class=\"mui-table-view-cell\" "+styleClass+" value="+tasks[item][JSON_ID]+">";
+					            liList+="    <a class=\"mui-slider-handle\">";
+					            liList+=        tasks[item][JSON_HINT]+zt;
+					            liList+="    </a>";
+					            liList+="</li>";
+								
+							}
+							mui.toast("任务列表变更，请点击【任务】查看任务列表了解任务信息。");
+							//descript.value="任务列表变更，请点击【任务】查看任务列表了解任务信息。"+'\n'+descript.value;
+							document.getElementById("unFinishedNum").innerHTML = unfinishedNum;
+							document.getElementById("taskList").innerHTML=liList;
+			    			break;
+			    		case SERVER_REFRESH_FIGHT:
+			    			var monsterName = arr[1].split(CMD_SEPARATOR)[0];
+			    			var hurt = arr[1].split(CMD_SEPARATOR)[1];
+			    			if(hurt==0) {
+			    				descript.value="你对怪物"+monsterName+"的攻击被闪避了\n"+descript.value;
+			    				mui.toast("你对怪物"+monsterName+"的攻击被闪避了")
+			    			} else {
+			    				descript.value="你对怪物"+monsterName+"造成了"+hurt+"点伤害\n"+descript.value;
+			    				mui.toast("你对怪物"+monsterName+"造成了"+hurt+"点伤害")
+			    			}
+			    			
+			    			break;
+			    		case SERVER_REFRESH_FIGHT_MONSTER:
+			    			var result = JSON.parse(arr[1]);
+			    			refreshFight(result);
+			    			break;
+			    		case SERVER_REFRESH_FIGHT_PERSION:
+			    			var result = JSON.parse(arr[1]);
+			    			if(result.length==1) { // 玩家攻击玩家结果
+			    				var src = result[0][FIGHT_SRC];
+			    				var target = result[0][FIGHT_TARGET];
+			    				var hurt = result[0][FIGHT_HURT];
+			    				if(hurt==0) {
+			    					descript.value=(src[JSON_ID]==playerInfo.ip?"你":src[JSON_NAME])+"对"+(target[JSON_ID]==playerInfo.ip?"你":target[JSON_NAME])+"的攻击被闪避了\n"+descript.value;
+			    				} else {
+			    					descript.value=(src[JSON_ID]==playerInfo.ip?"你":src[JSON_NAME])+"对"+(target[JSON_ID]==playerInfo.ip?"你":target[JSON_NAME])+"造成了"+hurt+"点伤害"+(target[JSON_CON]==0?"导致了"+(target[JSON_ID]==playerInfo.ip?"你":target[JSON_NAME])+"死亡":"")+"\n"+descript.value;
+			    				}
+			    				if(target[JSON_ID]==playerInfo.ip) { // 被攻击的目标是当前玩家，刷新玩家信息
+			    					playerInfo.con = target[JSON_CON];
+			    					showPlayerInfo();
+			    				}
+			    			} else if(result.length==2) { // 玩家攻击NPC结果
+			    				for(var index in result) {
+			    					var src = result[index][FIGHT_SRC];
+			    					var target = result[index][FIGHT_TARGET];
+			    					var hurt = result[index][FIGHT_HURT];
+			    					if(hurt==0) {
+			    						descript.value=(src[JSON_ID]==playerInfo.ip?"你":src[JSON_NAME])+"对"+(target[JSON_ID]==playerInfo.ip?"你":target[JSON_NAME])+"的攻击被闪避了\n"+descript.value;
+				    				} else {
+				    					descript.value=(src[JSON_ID]==playerInfo.ip?"你":src[JSON_NAME])+"对"+(target[JSON_ID]==playerInfo.ip?"你":target[JSON_NAME])+"造成了"+hurt+"点伤害"+(target[JSON_CON]==0?"导致了"+(target[JSON_ID]==playerInfo.ip?"你":target[JSON_NAME])+"死亡":"")+"\n"+descript.value;
+				    				}
+				    				if(target[JSON_ID]==playerInfo.ip) { // 被攻击的目标是当前玩家，刷新玩家信息
+				    					playerInfo.con = target[JSON_CON];
+			    						showPlayerInfo();
+				    				}
+			    				}
+			    			}
+			    			break;
+			    		case SERVER_FIGHT:
+			    			var result = JSON.parse(arr[1]); // 出现概率与对应怪物（多个）
+			    			var monsterNames = refreshFight(result)
+			    			var str = "【"+new Date().toLocaleTimeString()+"】"+'你遭遇了战斗，对手是'+monsterNames+'\n'+multiText.value;
+			    			multiText.value = str;
+			    			descript.value="你遭遇了一场战斗，请点击【战斗】查看遭遇的怪物列表并通过左滑列表中的记录进行【查看详情】或【战斗】。"+'\n'+descript.value;
+			    			generateOptions([{"text":"逃离战斗","value":result[JSON_ID]}],escape);
+			    			break;
+			    		case SERVER_MONSTERDETAIL:
+			    		case SERVER_PERSIONDETAIL:
+			    			var monster = JSON.parse(arr[1]);
+			    			document.getElementById("detailName").value = monster[JSON_NAME];
+			    			document.getElementById("detailCon").value = monster[JSON_CON];
+			    			document.getElementById("detailStr").value = monster[JSON_STR];
+			    			document.getElementById("detailDex").value = monster[JSON_DEX];
+			    			document.getElementById("detailDesc").value = monster[JSON_DESC];
+			    			break;
+			    		case SERVER_ITEMDETAIL:
+			    			var item = JSON.parse(arr[1]);
+			    			document.getElementById("itemName").value = item[JSON_NAME]+"("+item[JSON_UNIT]+")";
+			    			document.getElementById("price").value = item[JSON_PRICE];
+			    			document.getElementById("desc").value = item[JSON_DESC];
+			    			break;
+			    		case SERVER_ESCAPERESULT:
+			    			var str = "你没能脱离战斗……";
+			    			if("false"!=arr[1]) {
+			    				if(isDead) {
+			    					str = "你的死亡使你从战争中解脱了出来。";
+			    				} else {
+			    					str = "你成功脱离了战斗，可以选择离开这个战场了。";
+			    				}
+			    				
+			    				sendMessage(CLIENT_TRIGGER+SPLIT_SEPARATOR+arr[1]); // 向服务器发送查询触发事项的请求
+			    				
+			    				// 更新战斗信息
+			    				var liList="<li class=\"mui-table-view-divider\">怪物列表</li>";
+				    			document.getElementById("aliveNum").innerHTML = 0;
+								document.getElementById("monsterList").innerHTML=liList;
+			    			} else {
+			    				//playerInfo.hungry = playerInfo.hungry-1; // 逃脱失败也扣除饥饿值
+			    				showPlayerInfo();
+			    			}
+			    			multiText.value = "【"+new Date().toLocaleTimeString()+"】"+str+"\n"+multiText.value;
+			    			descript.value=str+'\n'+descript.value;
+			    			break;
+			    		case SERVER_TURNON:
+			    			playerInfo.hungry = arr[1];
+			    			mui.hideLoading();
+			    			isWaitingOthers = false;
+			    			showPlayerInfo();
+			    			break;
+			    		case SERVER_REBIRTH:
+			    			var p = JSON.parse(arr[1]);
+							playerInfo.ip = p[JSON_ID];
+							playerInfo.con = parseInt(p[JSON_CON]);
+							playerInfo.str = parseInt(p[JSON_STR]);
+							playerInfo.dex = parseInt(p[JSON_DEX]);
+							playerInfo.hungry = parseInt(p[JSON_HUNGRY]);
+							showPlayerInfo();
+							isDead = false;
+			    			break;
+			    		case SERVER_MONSTER_FIGHT: // 遭到怪物攻击
+			    			var hurt = parseInt(arr[1].split(CMD_SEPARATOR)[0]);
+			    			var monsterName = arr[1].split(CMD_SEPARATOR)[1];
+			    			playerInfo.con = playerInfo.con-hurt;// 遭受攻击损失体质值
+			    			showPlayerInfo();
+			    			if(hurt == 0) {
+			    				descript.value="怪物"+monsterName+"对你攻击被你闪避了\n"+descript.value;
+			    				mui.toast("怪物"+monsterName+"对你攻击被你闪避了");
+			    			} else {
+			    				descript.value="怪物"+monsterName+"对你造成"+hurt+"点伤害\n"+descript.value;
+			    				mui.toast("怪物"+monsterName+"对你造成"+hurt+"点伤害");
+			    			}
+			    			break;
+			    		case SERVER_DROPOUT: // 刷新物品列表
+			    			//descript.value="物品列表发生了变化，可以点击【物品】查看物品列表\n"+descript.value;
+			    			mui.toast("物品列表发生了变化，可以点击【物品】查看物品列表。");
+			    			var things = JSON.parse(arr[1]); // 玩家拥有的物品
+			    			refreshItem(things);
+			    			break;
+			    		case SERVER_EVENT:
+			    			var event = JSON.parse(arr[1]);
+			    			descript.value="新的事件触发，可以点击[请选择]进行选择操作\n"+descript.value;
+			    			generateOptions([{"text":event[JSON_ACTION],"value":event[JSON_GOT]+ITEM_SEPARATOR+event[JSON_UNIT]},{"text":"离开","value":"NOACTION"}],clientEvent);
+			    			break;
+			    		case SERVER_REFRESHPLAYER:
+			    			var status = JSON.parse(arr[1]);
+			    			refreshPlayer(status);
+			    			mui.toast("你感觉自己变得不一样了，似乎身体状态发生了变化。");
+			    			//descript.value="你感觉自己变得不一样了，似乎身体状态发生了变化\n"+descript.value;
+			    			break;
+			    		case SERVER_NPC:
+			    			var npc = JSON.parse(arr[1]);
+			    			talkToNPC(npc);
+			    			break;
+			    		case SERVER_REFRESHPERSIONS:
+			    			persions = JSON.parse(arr[1]);
+			    			refreshPersion();
+			    			break;
+			    		case SERVER_REFRESH_MAP:
+			    			nodes = JSON.parse(arr[1]);
+			    			refreshMap();
+			    			break;
+			    		case SERVER_MOD:
+			    			mod = arr[1];
+			    			break;
+			    		case SERVER_PICKROLE:
+			    			if(arr[1]!="false") {
+			    				for(index in roles) {
+									if(roles[index].ID == arr[1]) {
+										playerInfo = {};
+										playerInfo.ip = roles[index]["IP"];
+										playerInfo.con = parseInt(roles[index].CON);
+										playerInfo.str = parseInt(roles[index].STR);
+										playerInfo.dex = parseInt(roles[index].DEX);
+										playerInfo.hungry = parseInt(roles[index].HUNGRY);
+										showPlayerInfo();
+										break;
+									}
+								}
+								mui('#popover').popover('hide');
+								mui.showLoading();
+								isWaitingOthers = true;
+								generateOptions([{value:"2-2",text:"出生点"}],clientMove); // 玩家选择睁开眼睛后即移动至出生点
+			    			} else {
+			    				mui.toast("角色已经被其它用户抢先选择了哦~~~");
+			    			}
+				    		
+			    			break;
+			    		case SERVER_SHOWPLAYER:
+			    			var str = "【"+new Date().toLocaleTimeString()+"】"+arr[1]+'\n'+multiText.value;
+			    			multiText.value = str;
+			    			mui.toast(arr[1]);
+			    			break;
+			    		case SERVER_WAIT:
+			    			mui.showLoading("等待其他玩家操作");
+							isWaitingOthers = true;
+			    			break;
+			    		case SERVER_FIGHT_PERSION:
+			    			var hurt = parseInt(arr[1].split(CMD_SEPARATOR)[0]);
+			    			var personName = arr[1].split(CMD_SEPARATOR)[1];
+			    			
+			    			if(arr[1].split(CMD_SEPARATOR).length == 3) { // 攻击NPC
+			    				if(hurt == 0) {
+				    				descript.value="你对"+personName+"的攻击被其闪避了\n"+descript.value;
+				    				mui.toast("你对"+personName+"的攻击被其闪避了");
+				    			} else {
+				    				descript.value="你对"+personName+"造成"+hurt+"点伤害\n"+descript.value;
+				    				mui.toast("你对"+personName+"造成"+hurt+"点伤害");
+				    			}
+			    				
+			    				var hurt2 = arr[1].split(CMD_SEPARATOR)[2];
+			    				if(hurt2 == 0) {
+				    				descript.value=personName+"对你攻击被你闪避了\n"+descript.value;
+				    				mui.toast(personName+"对你攻击被你闪避了");
+				    			} else {
+				    				descript.value=personName+"对你造成"+hurt2+"点伤害\n"+descript.value;
+				    				mui.toast(personName+"对你造成"+hurt2+"点伤害");
+				    				playerInfo.con = playerInfo.con-hurt2;// 遭受攻击损失体质值
+				    				showPlayerInfo();
+				    			}
+			    			} else { // 攻击玩家
+			    				if(hurt == 0) {
+				    				descript.value="你对"+personName+"的攻击被其闪避了\n"+descript.value;
+				    				mui.toast("你对"+personName+"的攻击被其闪避了");
+				    			} else {
+				    				descript.value="你对"+personName+"造成"+hurt+"点伤害\n"+descript.value;
+				    				mui.toast("你对"+personName+"造成"+hurt+"点伤害");
+				    			}
+			    			}
+			    			break;
+            		}
+            	}
+            	mui('.mui-scroll-wrapper').scroll();
+            	if(!isWaitingOthers) // 不处于等待其他用户状态时，服务器响应完成即关闭等待
+            	mui.hideLoading();
+            }
+            function refreshMap() {
+            	jsonSort(nodes,JSON_ID,true);
+            	var maxId = nodes[0][JSON_ID];
+            	nodes.reverse();
+            	var rowNum = maxId.split("-")[0];
+        		var columnNum = maxId.split("-")[1];
+        		var table = document.body.querySelector('tbody');
+        		table.innerHTML=''; // 先清空原有数据
+        		for(var i=0;i<rowNum;i++){
+					var tr = document.createElement('tr');
+					for(var j=0;j<columnNum;j++) {
+						var td = document.createElement('td');
+						if(mod==MOD_SURVIVAL && 0!=nodes[i*columnNum+j][SURVIVAL_POISON_NUM]) {
+							td.innerText = nodes[i*columnNum+j][JSON_NAME]+"\n"+nodes[i*columnNum+j][SURVIVAL_POISON_NUM];
+						} else {
+							td.innerText = nodes[i*columnNum+j][JSON_NAME];
+						}
+						
+						if(playerInfo.position==nodes[i*columnNum+j][JSON_ID]) {
+							td.style.backgroundColor = "red";
+						}
+						if(mod==MOD_SURVIVAL) {
+							if(true==nodes[i*columnNum+j][SURVIVAL_POISONING]) {
+								td.style.backgroundColor = "green";
+							}
+						}
+						td.style.padding=10;
+						td.style.margin=10;
+						td.style.textAlign="center";
+						td.style.verticalAlign="middle";
+						td.tag = nodes[i*columnNum+j];
+						td.addEventListener("tap",function(){
+							if(isFirstMove&&mod==MOD_SURVIVAL) {
+								clientMove(this.tag[JSON_ID],this.tag[JSON_NAME]);
+								mui('#mapPopover').popover('hide'); // 关闭地图列表
+							} else {
+								mui.toast(this.tag[JSON_DESC]);
+							}
+						});
+						tr.appendChild(td);
+					}
+					table.appendChild(tr);
+				}
+            }
+            function talkToNPC(npc) {
+    			var selectedOptions = [];
+    			if(npc[JSON_CON] > 0) { // 已经死亡的NPC无法沟通
+    				selectedOptions.push({"text":npc[JSON_NAME],"value":npc[JSON_ID]});
+    			}
+    			selectedOptions.push({"text":"离开","value":"NOACTION"});
+    			generateOptions(selectedOptions,clientTalk);
+            }
+            function refreshPlayer(status) {
+            	playerInfo = {};
+            	playerInfo.ip = status[JSON_ID];
+            	playerInfo.con = status[JSON_CON];
+				playerInfo.str = status[JSON_STR];
+				playerInfo.dex = status[JSON_DEX];
+				playerInfo.hungry = status[JSON_HUNGRY];
+				playerInfo.position = status[JSON_POSITION];
+            	showPlayerInfo();
+            }
+            function refreshItem(things) {
+            	var itemNum = 0;
+    			var liList="<li class=\"mui-table-view-divider\">物品列表</li>";
+    			liList+="<select id=\"selectedPersion\" class=\"mui-btn mui-btn-block\">"
+    			liList+="<option selected>---请点此选择使用目标---</option>";
+    			for(var index in persions) {
+    				liList+=("<option value="+persions[index][JSON_ID]+">"+persions[index][JSON_NAME]+"</option>");
+    			}
+				liList+="</select>";
+    			for(var index in things) {
+    				var item = things[index];
+    				var zt = "";
+    				var action = "		<a class=\"mui-btn mui-btn-red\">使用</a>";
+					if(item[JSON_TYPE]==ITEM_TYPE_EQUIPMENT_OFF) {
+						action = "		<a class=\"mui-btn mui-btn-red\">装备</a>";
+						zt = "(未装备)";
+					} else if(item[JSON_TYPE]==ITEM_TYPE_EQUIPMENT_ON) {
+						action = "		<a class=\"mui-btn mui-btn-red\">卸下</a>";
+						zt = "(已装备)";
+					}
+					itemNum++;
+					liList+="<li class=\"mui-table-view-cell\">";
+		            liList+="	<div class=\"mui-slider-right mui-disabled\">";
+		            liList+="		<input type=\"hidden\" value=\""+item[JSON_ID]+"\"/>";
+					liList+="		<a href=\"#detail2Popover\" class=\"mui-btn mui-btn-yellow\">查看详情</a>";
+					liList+=action;
+					liList+="	</div>";
+		            liList+="    <a class=\"mui-slider-handle\">";
+		            liList+=        item[JSON_NAME]+zt+"("+item[JSON_UNIT]+")";
+		            liList+="    </a>";
+		            liList+="</li>";
+    			}
+    			document.getElementById("itemNum").innerHTML = itemNum;
+				document.getElementById("itemList").innerHTML=liList;
+            }
+            
+            function refreshPersion() {
+    			var persionNames = "";
+    			var aliveNum = 0;
+    			document.getElementById("selectedPersion").options.length=0
+    			
+    			var liList="<li class=\"mui-table-view-divider\">人物列表</li>";
+    			document.getElementById("selectedPersion").options.add(new Option("---请点此选择使用目标---","0"));
+    			
+    			for(var index in persions) {
+    				var persion = persions[index];
+    				if(playerInfo.ip == persion[JSON_ID]) { // 刷新自身的信息
+    					playerInfo = {};
+    					playerInfo.ip = persion[JSON_ID];
+    					playerInfo.con = persion[JSON_CON];
+    					playerInfo.dex = persion[JSON_DEX];
+    					playerInfo.str = persion[JSON_STR];
+    					playerInfo.hungry = persion[JSON_HUNGRY];
+    					playerInfo.position = persion[JSON_POSITION];
+    					showPlayerInfo();
+    				}
+    				persionNames+=("["+persion[JSON_NAME]+"]");
+    				var zt = "";
+					var styleClass="";
+					var disabled = "";
+					if(persion[JSON_CON] <= 0 || persion[JSON_HUNGRY] <= 0) {
+						zt="（死亡）";
+						disabled = "disabled=\"disabled\""; // 已经死亡的不能再予以攻击
+						styleClass="style=\"color:lightgray\"";
+					} else {
+						zt="（存活）";
+						aliveNum++;
+					}
+					var talkAction = "";
+					if(!f_check_IP(persion[JSON_ID].substring(1))) { // NPC对象可以自行触发交谈
+						talkAction = "		<a class=\"mui-btn mui-btn-green\" "+disabled+">交谈</a>"
+					}
+					liList+="<li class=\"mui-table-view-cell\" "+styleClass+" value=\""+index+"\">";
+		            liList+="	<div class=\"mui-slider-right mui-disabled\">";
+		            liList+="		<input type=\"hidden\" value=\""+persion[JSON_ID]+"\"/>";
+		            liList+="		<input type=\"hidden\" value=\""+persion[JSON_NAME]+"\"/>";
+		            liList+="		<input type=\"hidden\" value=\""+persion[JSON_CON]+"\"/>";
+					liList+="		<a href=\"#detailPopover\" "+disabled+" class=\"mui-btn mui-btn-yellow\">查看详情</a>";
+					liList+=talkAction;
+					liList+="		<a class=\"mui-btn mui-btn-red\" "+disabled+">切磋</a>";
+					liList+="	</div>";
+		            liList+="    <a class=\"mui-slider-handle\">";
+		            liList+=        persion[JSON_NAME]+zt;
+		            liList+="    </a>";
+		            liList+="</li>";
+		            
+		            document.getElementById("selectedPersion").options.add(new Option(persion[JSON_NAME],persion[JSON_ID]));
+    			}
+    			document.getElementById("persionNum").innerHTML = aliveNum;
+				document.getElementById("persionList").innerHTML=liList;
+				return persionNames;
+            }
+            function refreshFight(result) {
+            	var	monsters = result[JSON_MONSTER];
+    			var fightId = result[JSON_ID];
+    			var monsterNames = "";
+    			var aliveNum = 0;
+    			var liList="<li class=\"mui-table-view-divider\">怪物列表</li>";
+    			for(var index in monsters) {
+    				var monster = monsters[index];
+    				monsterNames+=("["+monster[JSON_NAME]+"]");
+    				var zt = "";
+					var styleClass="";
+					var disabled = "";
+					if(monster[JSON_CON] == 0) {
+						zt="（死亡）";
+						disabled = "disabled=\"disabled\""; // 已经死亡的怪物不能再予以攻击
+						styleClass="style=\"color:lightgray\"";
+					} else {
+						zt="（存活）";
+						aliveNum++;
+					}
+					liList+="<li class=\"mui-table-view-cell\" "+styleClass+" value=\""+index+"\">";
+		            liList+="	<div class=\"mui-slider-right mui-disabled\">";
+		            liList+="		<input type=\"hidden\" value=\""+monster[JSON_ID]+"\"/>";
+					liList+="		<a href=\"#detailPopover\" "+disabled+" class=\"mui-btn mui-btn-yellow\">查看详情</a>";
+					liList+="		<a class=\"mui-btn mui-btn-red\" "+disabled+">战斗</a>";
+					liList+="	</div>";
+		            liList+="    <a class=\"mui-slider-handle\">";
+		            liList+=        monster[JSON_NAME]+zt;
+		            liList+="    </a>";
+		            liList+="</li>";
+    			}
+    			document.getElementById("aliveNum").innerHTML = aliveNum;
+				document.getElementById("monsterList").innerHTML=liList;
+				return monsterNames;
+            }
+            function generateOptions(data,callback) { // 生成选项
+				optionPicker.setData(data);
+				pickerButton = document.getElementById('option');
+				pickerButton.addEventListener('tap', function(event) {
+					optionPicker.show(function(items) {
+						if(items.length == 0 || items[0].value=="") { // 防止选项莫名消失后无法恢复显示
+							optionPicker = new mui.PopPicker();
+						}
+						callback(items[0].value,items[0].text);
+					});
+				}, false);
+           }
+            function clientUseItem(id,name) {
+            	var persionName = name.split(CMD_SEPARATOR)[0];
+            	if("---请点此选择使用目标---"==persionName) {
+            		mui.toast("请选择有效的使用目标");
+            		return;
+            	}
+            	var itemName = name.split(CMD_SEPARATOR)[1];
+            	var str = "【"+new Date().toLocaleTimeString()+"】"+"你对"+persionName+'使用了物品'+itemName+'\n'+multiText.value;
+            	multiText.value = str;
+            	sendMessage(CLIENT_USE_ITEM+SPLIT_SEPARATOR+id);
+            }
+            function clientTalk(npcId,npcName){ // 玩家移动
+            	var str = "【"+new Date().toLocaleTimeString()+"】"+"你选择了与"+npcName+'交谈\n'+multiText.value;
+			    multiText.value = str;
+            	sendMessage(CLIENT_TALK+SPLIT_SEPARATOR+npcId);
+            }
+            function clientEvent(pickId,pickName){ // 玩家移动
+            	var str = "【"+new Date().toLocaleTimeString()+"】"+"你选择了"+pickName+'\n'+multiText.value;
+			    multiText.value = str;
+            	sendMessage(CLIENT_EVENT+SPLIT_SEPARATOR+pickId);
+            }
+            function escape(fightId,actionName) {
+            	var str = "【"+new Date().toLocaleTimeString()+"】"+"你企图"+actionName+'\n'+multiText.value;
+			    multiText.value = str;
+            	sendMessage(CLIENT_ESCAPE+SPLIT_SEPARATOR+fightId);
+            }
+            function clientPicker(pickId,pickName) { // 玩家移动
+            	var str = "【"+new Date().toLocaleTimeString()+"】"+"你选择了"+pickName+'\n'+multiText.value;
+			    multiText.value = str;
+            	sendMessage(CLIENT_PICK+SPLIT_SEPARATOR+pickId);
+            }
+            function clientMove(positionId,positionName) { // 玩家移动
+            	var str = "【"+new Date().toLocaleTimeString()+"】"+"你移动到了"+positionName+'\n'+multiText.value;
+			    multiText.value = str;
+            	position = positionId;
+            	playerInfo.position = positionId;
+            	sendMessage(CLIENT_MOVE+SPLIT_SEPARATOR+positionId);
+            	isFirstMove = false;
+            }
+            /*
+			 * @description        根据某个字段实现对json数组的排序
+			 * @param     array    要排序的json数组对象
+			 * @param     field    排序字段（此参数必须为字符串）
+			 * @param     reverse  是否倒序（默认为false）
+			 * @return    array    返回排序后的json数组
+			*/
+			function jsonSort(array, field, reverse) {
+			    //数组长度小于2 或 没有指定排序字段 或 不是json格式数据
+			    if(array.length < 2 || !field || typeof array[0] !== "object") return array;
+			    //数字类型排序
+			    if(typeof array[0][field] === "number") {
+			        array.sort(function(x, y) { return x[field] - y[field]});
+			    }
+			    //字符串类型排序
+			    if(typeof array[0][field] === "string") {
+			        array.sort(function(x, y) { return x[field].localeCompare(y[field])});
+			    }
+			    //倒序
+			    if(reverse) {
+			        array.reverse();
+			    }
+			    return array;
+			}
+            function sort(a,type) {
+            	if(type=="desc") {
+            		 a.sort(function(a,b){return b.localeCompare(a)}); //反序排列
+            	} else {
+            		a.sort(function(a,b){return a.localeCompare(b)}); //正序排列 
+            	}
+            }
+		</script>
+	</body>
+
+</html>
